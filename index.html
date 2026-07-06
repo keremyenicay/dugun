@@ -339,9 +339,20 @@ footer .line { width: 100px; height: 2px; background: var(--gold); margin: 40px 
 
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
+/* ================= KATKI BÖLÜMLERİ ARASI BOŞLUĞU AZALT (upload / voice / guestbook) ================= */
+#upload { padding-top: 90px; padding-bottom: 45px; }
+#voice { padding-top: 45px; padding-bottom: 45px; }
+#guestbook { padding-top: 45px; }
+#voice .upload-header, #upload .upload-header { margin-bottom: 32px; }
+
 /* ================= MOBİL (GERÇEK MOBİL DENEYİM) ================= */
 @media (max-width: 768px) {
   section { padding: 80px 15px; }
+
+  /* Katkı bölümleri mobilde daha da sıkı */
+  #upload { padding-top: 60px; padding-bottom: 30px; }
+  #voice { padding-top: 30px; padding-bottom: 30px; }
+  #guestbook { padding-top: 30px; }
 
   /* Dekoratif eğri çizgiler mobilde metnin üstüne binmesin diye gizlendi */
   .svg-bg { display: none; }
