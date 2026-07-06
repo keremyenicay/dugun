@@ -986,7 +986,7 @@ document.getElementById('sendMsgBtn').addEventListener('click', () => {
   const list = loadMessages();
   list.unshift({ name, text, ts: Date.now() });
   saveMessages(list);
-
+/*
   messageWall.insertBefore(createMessageCard({ name, text }), messageWall.firstChild);
   nameEl.value = '';
   textEl.value = '';
