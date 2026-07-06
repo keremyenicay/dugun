@@ -85,8 +85,9 @@ section { position: relative; padding: 140px 20px; z-index: 2; overflow: hidden;
 .curtain-content h2 { font-size: clamp(50px, 10vw, 90px); text-shadow: 0 10px 30px rgba(0,0,0,0.8); margin-bottom: 20px; color: var(--gold); }
 .curtain-content p { font-family: 'Playfair Display', serif; font-size: clamp(16px, 3.5vw, 22px); letter-spacing: 0.1em; opacity: 0.9; }
 
+/* HATA DÜZELTİLDİ: Sağ perde için fazladan yazılan .curtain-wrapper.open silindi */
 .curtain-wrapper.open .curtain-panel.left { transform: translateX(-100%); }
-.curtain-wrapper.open .curtain-wrapper.open .curtain-panel.right { transform: translateX(100%); }
+.curtain-wrapper.open .curtain-panel.right { transform: translateX(100%); }
 .curtain-wrapper.open .curtain-content { opacity: 0; transform: translate(-50%, -60%) scale(1.1); filter: blur(10px); }
 
 /* ================= 2. AŞK KİTABI (THE BOOK OF LOVE) ================= */
