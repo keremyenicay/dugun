@@ -62,66 +62,79 @@ section { position: relative; padding: 140px 20px; z-index: 2; overflow: hidden;
 /* GPU Hızlandırma Sınıfları */
 .gpu-accel { will-change: transform, opacity, filter; transform: translateZ(0); }
 
-/* ================= 1. TİYATRO PERDESİ (SİYAH-BEYAZ / PROFESYONEL) =================
-   Yana doğru değil, tiyatro perdesi gibi YUKARI doğru açılır. Kitap kaldırıldı. */
+/* ================= 1. TİYATRO PERDESİ (BORDO KADİFE + ALTIN — SAĞA/SOLA AÇILIR) =================
+   Videodaki gibi ortadan iki yana açılan gerçek tiyatro perdesi. */
 .curtain-wrapper {
   position: fixed; inset: 0; z-index: 999999; overflow: hidden; pointer-events: auto;
-  background: #000;
+  background: #240610;
 }
-/* Perde kumaşı - dikey pileli, monokrom */
-.curtain-drape {
-  position: absolute; inset: 0; z-index: 2;
+/* Perde kanatları - bordo kadife, dikey kıvrımlı */
+.curtain-panel {
+  position: absolute; top: 0; bottom: 0; width: 52%; z-index: 2;
   background:
-    linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0) 20%, rgba(0,0,0,0) 80%, rgba(0,0,0,0.75)),
+    linear-gradient(90deg, rgba(0,0,0,0.55), rgba(0,0,0,0) 16%, rgba(0,0,0,0) 84%, rgba(0,0,0,0.55)),
     repeating-linear-gradient(90deg,
-      #060606 0px, #242424 34px, #3d3d3d 60px, #1b1b1b 90px, #060606 120px);
-  box-shadow: inset 0 -60px 120px rgba(0,0,0,0.8);
-  transition: transform 2.4s var(--bezier-smooth);
+      #360910 0px, #6f1420 20px, #911c2a 34px, #520f19 52px, #360910 70px);
+  box-shadow: inset 0 -90px 160px rgba(0,0,0,0.55);
+  transition: transform 2.6s var(--bezier-smooth);
   will-change: transform;
 }
-.curtain-drape::after { /* kumaş dokusu */
-  content: ''; position: absolute; inset: 0; opacity: 0.22; mix-blend-mode: overlay;
+.curtain-panel::after { /* kadife dokusu */
+  content: ''; position: absolute; inset: 0; opacity: 0.16; mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-/* Üst pelmet / valans - gümüş şeritli */
-.curtain-valance {
-  position: absolute; top: 0; left: 0; right: 0; height: clamp(70px, 12vh, 130px); z-index: 4;
-  background: repeating-linear-gradient(90deg,
-      #000 0px, #2a2a2a 30px, #474747 52px, #1a1a1a 78px, #000 100px);
-  border-bottom: 2px solid rgba(232,232,232,0.55);
-  box-shadow: 0 14px 34px rgba(0,0,0,0.6);
-  transition: transform 2.4s var(--bezier-smooth);
-  will-change: transform;
-}
-.curtain-valance::after { /* alt kenar gümüş püskül dizisi */
-  content: ''; position: absolute; left: 0; right: 0; bottom: -9px; height: 9px;
-  background: radial-gradient(circle at 12px 0, rgba(225,225,225,0.5) 0 3px, transparent 3.5px) 0 0/24px 9px repeat-x;
-}
-.curtain-content {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  text-align: center; color: #fff; width: 100%; z-index: 5; padding: 0 20px;
-  transition: opacity 1.4s ease, transform 1.8s ease;
-}
-.curtain-content h2 {
-  font-family: 'Playfair Display', serif; font-weight: 600; font-size: clamp(40px, 9vw, 82px);
-  letter-spacing: 0.02em; color: #f5f5f5; text-shadow: 0 6px 30px rgba(0,0,0,0.9); margin-bottom: 22px;
-}
-.curtain-content .amp { color: #b9b9b9; font-style: italic; }
-.curtain-content p {
-  font-family: 'Playfair Display', serif; font-size: clamp(13px, 3.4vw, 19px);
-  letter-spacing: 0.3em; text-transform: uppercase; color: #cfcfcf;
-}
-.curtain-content .rule { width: 90px; height: 1px; background: rgba(225,225,225,0.7); margin: 26px auto 0; }
-.curtain-hint {
-  position: absolute; bottom: 8%; left: 50%; transform: translateX(-50%); z-index: 5; width: 100%; text-align: center;
-  color: rgba(230,230,230,0.85); font-family: 'Playfair Display', serif;
-  letter-spacing: 0.25em; font-size: 12px; text-transform: uppercase; animation: pulse 2s infinite;
+.curtain-panel.left { left: 0; }
+.curtain-panel.right { right: 0; }
+.curtain-panel.right::before { /* orta dikiş gölgesi */
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 40px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.5), transparent);
 }
 
-/* AÇILIŞ: perde yukarı kalkar */
-.curtain-wrapper.open .curtain-drape { transform: translateY(-100%); }
-.curtain-wrapper.open .curtain-valance { transform: translateY(-105%); }
-.curtain-wrapper.open .curtain-content { opacity: 0; transform: translate(-50%, -170%); }
+/* Üst valans (pelmet) - altın şeritli bordo swag */
+.curtain-valance {
+  position: absolute; top: 0; left: 0; width: 100%; height: clamp(80px, 15vh, 165px);
+  z-index: 5; pointer-events: none; display: block;
+  filter: drop-shadow(0 12px 20px rgba(0,0,0,0.5));
+}
+.curtain-valance svg { width: 100%; height: 100%; display: block; }
+
+.curtain-content {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  text-align: center; width: 100%; z-index: 6; padding: 0 24px;
+  transition: opacity 0.9s ease, transform 1.3s var(--bezier-apple);
+}
+.curtain-content .eyebrow {
+  font-family: 'Playfair Display', serif; letter-spacing: 0.42em; text-transform: uppercase;
+  font-size: clamp(11px, 2.7vw, 14px); color: var(--gold-light); opacity: 0.9; margin-bottom: 26px;
+}
+.curtain-content h2 {
+  font-family: 'Great Vibes', cursive; font-size: clamp(56px, 13vw, 118px); line-height: 1;
+  color: var(--gold-light); text-shadow: 0 8px 34px rgba(0,0,0,0.6);
+}
+.curtain-content h2 .amp { color: #f3e4c0; }
+.curtain-content .rule {
+  width: min(70%, 320px); height: 1px; margin: 30px auto;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent); position: relative;
+}
+.curtain-content .rule::before {
+  content: '❦'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  color: var(--gold); background: #240610; padding: 0 14px; font-size: 16px;
+}
+.curtain-content .cdate {
+  font-family: 'Playfair Display', serif; letter-spacing: 0.34em; text-transform: uppercase;
+  font-size: clamp(13px, 3.2vw, 19px); color: #f3e4c0;
+}
+.curtain-hint {
+  position: absolute; bottom: 7%; left: 50%; transform: translateX(-50%); z-index: 6; width: 100%; text-align: center;
+  color: var(--gold-light); font-family: 'Playfair Display', serif; opacity: 0.75;
+  letter-spacing: 0.28em; font-size: 12px; text-transform: uppercase; animation: pulse 2.4s infinite;
+}
+
+/* AÇILIŞ: kanatlar iki yana açılır, yazı & valans belirir */
+.curtain-wrapper.open .curtain-panel.left { transform: translateX(-100%); }
+.curtain-wrapper.open .curtain-panel.right { transform: translateX(100%); }
+.curtain-wrapper.open .curtain-content { opacity: 0; transform: translate(-50%, -50%) scale(1.08); }
+.curtain-wrapper.open .curtain-valance { transform: translateY(-25%); opacity: 0; transition: transform 1.6s ease, opacity 1.6s ease; }
 .curtain-wrapper.open .curtain-hint { opacity: 0; transition: opacity 0.4s; }
 .curtain-wrapper.gone { opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.8s ease, visibility 0.8s; }
 
@@ -334,14 +347,42 @@ footer .line { width: 100px; height: 2px; background: var(--gold); margin: 40px 
 <body>
 
 <div class="curtain-wrapper" id="curtain">
-  <div class="curtain-valance"></div>
-  <div class="curtain-drape"></div>
-  <div class="curtain-content">
-    <h2>Gülçiçek <span class="amp">&</span> Kerem</h2>
-    <p>Hoş Geldiniz</p>
-    <div class="rule"></div>
+  <div class="curtain-panel left"></div>
+  <div class="curtain-panel right"></div>
+
+  <div class="curtain-valance">
+    <svg viewBox="0 0 1200 180" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="valFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#8a1a28"/>
+          <stop offset="1" stop-color="#3f0b14"/>
+        </linearGradient>
+      </defs>
+      <!-- Bordo kadife swag -->
+      <path d="M0,0 H1200 V50 Q1100,152 1000,50 Q900,152 800,50 Q700,152 600,50 Q500,152 400,50 Q300,152 200,50 Q100,152 0,50 Z" fill="url(#valFill)"/>
+      <!-- Üst altın bant -->
+      <rect x="0" y="0" width="1200" height="9" fill="#D4AF37"/>
+      <!-- Swag alt kenarında altın şerit -->
+      <path d="M1200,50 Q1100,152 1000,50 Q900,152 800,50 Q700,152 600,50 Q500,152 400,50 Q300,152 200,50 Q100,152 0,50" fill="none" stroke="#D4AF37" stroke-width="5"/>
+      <!-- Altın püsküller -->
+      <g fill="#D4AF37" stroke="#D4AF37" stroke-width="3">
+        <line x1="100" y1="150" x2="100" y2="170"/><circle cx="100" cy="173" r="6"/>
+        <line x1="300" y1="150" x2="300" y2="170"/><circle cx="300" cy="173" r="6"/>
+        <line x1="500" y1="150" x2="500" y2="170"/><circle cx="500" cy="173" r="6"/>
+        <line x1="700" y1="150" x2="700" y2="170"/><circle cx="700" cy="173" r="6"/>
+        <line x1="900" y1="150" x2="900" y2="170"/><circle cx="900" cy="173" r="6"/>
+        <line x1="1100" y1="150" x2="1100" y2="170"/><circle cx="1100" cy="173" r="6"/>
+      </g>
+    </svg>
   </div>
-  <div class="curtain-hint">Perdeyi açmak için dokunun</div>
+
+  <div class="curtain-content">
+    <div class="eyebrow">Düğünümüze Hoş Geldiniz</div>
+    <h2>Gülçiçek <span class="amp">&</span> Kerem</h2>
+    <div class="rule"></div>
+    <div class="cdate">28 · 29 Ağustos 2026</div>
+  </div>
+  <div class="curtain-hint">Perdeyi aralamak için dokunun</div>
 </div>
 
 <section class="hero">
@@ -491,11 +532,11 @@ function openCurtain() {
   curtainOpened = true;
   clearTimeout(autoOpenTimer);
   curtain.classList.add('open');
-  // Perde yukarı kalktıktan sonra tamamen kaldır ve kaydırmayı aç
+  // Kanatlar iki yana açıldıktan sonra perdeyi tamamen kaldır ve kaydırmayı aç
   setTimeout(() => {
     curtain.classList.add('gone');
     document.body.style.overflowY = 'auto';
-  }, 2400);
+  }, 2600);
 }
 
 curtain.addEventListener('click', openCurtain);
