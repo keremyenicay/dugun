@@ -606,10 +606,15 @@ async function createSession(file, guestName){
   const res = await fetch(SCRIPT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'create', fileName: finalName, mimeType: file.type || 'application/octet-stream' })
+    body: JSON.stringify({ action: 'create', fileName: finalName, mimeType: file.type || 'application/octet-stream', origin: location.origin })
   });
-  const data = await res.json();
-  if (!data.uploadUrl) throw new Error(data.error || 'Yükleme oturumu açılamadı');
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch (e) { throw new Error('Sunucudan beklenmeyen cevap geldi'); }
+  if (!data.uploadUrl) {
+    if (data.action === 'create') throw new Error('Apps Script eski kodla calisiyor — yeni surum olarak dagitilmali (KURULUM adim 6)');
+    throw new Error(data.error || 'Yükleme oturumu açılamadı');
+  }
   return data.uploadUrl;
 }
 
