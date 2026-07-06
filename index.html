@@ -56,7 +56,7 @@ body {
 
 h1, h2, h3, .script-font { font-family: 'Great Vibes', cursive; font-weight: 400; }
 .sub-heading { font-family: 'Playfair Display', serif; }
-section { position: relative; padding: 140px 20px; z-index: 2; overflow: hidden; }
+section { position: relative; padding: 90px 20px; z-index: 2; overflow: hidden; }
 .wrap { max-width: 1100px; margin: 0 auto; position: relative; z-index: 3; }
 
 /* GPU Hızlandırma Sınıfları */
@@ -160,7 +160,7 @@ section { position: relative; padding: 140px 20px; z-index: 2; overflow: hidden;
 }
 
 /* SAYAÇ */
-.countdown { display: flex; justify-content: center; gap: clamp(20px, 5vw, 60px); margin-top: 50px; }
+.countdown { display: flex; justify-content: center; gap: clamp(20px, 5vw, 60px); margin-top: 40px; }
 .cd-item { display: flex; flex-direction: column; align-items: center; }
 .cd-num { font-family: 'Playfair Display', serif; font-size: clamp(30px, 7vw, 55px); color: var(--emerald); line-height: 1; font-weight: 600; }
 .cd-label { font-size: 14px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--ink-light); margin-top: 10px; }
@@ -190,13 +190,13 @@ section { position: relative; padding: 140px 20px; z-index: 2; overflow: hidden;
 .glass-card:hover::before { left: 150%; }
 
 /* ================= 6. TIMELINE (ÇİZGİ VE NOKTALAR) ================= */
-.timeline-wrap { position: relative; margin-top: 80px; padding: 40px 0; }
+.timeline-wrap { position: relative; margin-top: 50px; padding: 30px 0; }
 .timeline-line {
   position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-50%);
   background: linear-gradient(to bottom, transparent, var(--gold), var(--gold), transparent);
   height: 0; /* JS ile çizilecek */ transition: height 2s var(--bezier-apple);
 }
-.timeline-event { display: flex; align-items: center; justify-content: space-between; margin-bottom: 100px; position: relative; width: 100%; }
+.timeline-event { display: flex; align-items: center; justify-content: space-between; margin-bottom: 65px; position: relative; width: 100%; }
 .tl-left, .tl-right { width: 45%; }
 .tl-left { text-align: right; }
 .tl-right { text-align: left; }
@@ -221,7 +221,7 @@ section { position: relative; padding: 140px 20px; z-index: 2; overflow: hidden;
 .btn-map:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2); }
 
 /* ================= 7. GÜZEL SÖZLER (QUOTES) ================= */
-.quote-block { text-align: center; margin: 100px 0; padding: 0 20px; }
+.quote-block { text-align: center; margin: 55px 0; padding: 0 20px; }
 .quote-text {
   font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: clamp(26px, 6vw, 42px);
   color: var(--emerald); line-height: 1.5; max-width: 900px; margin: 0 auto;
@@ -329,7 +329,7 @@ textarea.input-elegant { height: 150px; resize: none; }
 
 /* ================= 11. FOOTER ================= */
 footer {
-  text-align: center; padding: 150px 20px 80px; position: relative; background: var(--emerald-dark); color: var(--pearl);
+  text-align: center; padding: 90px 20px 55px; position: relative; background: var(--emerald-dark); color: var(--pearl);
 }
 footer::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 80%; height: 1px; background: linear-gradient(90deg, transparent, var(--gold), transparent); }
 footer .heart { font-size: 30px; color: var(--rose-gold); margin-bottom: 30px; animation: pulse 2s infinite; }
@@ -340,19 +340,21 @@ footer .line { width: 100px; height: 2px; background: var(--gold); margin: 40px 
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
 /* ================= KATKI BÖLÜMLERİ ARASI BOŞLUĞU AZALT (upload / voice / guestbook) ================= */
-#upload { padding-top: 90px; padding-bottom: 45px; }
-#voice { padding-top: 45px; padding-bottom: 45px; }
-#guestbook { padding-top: 45px; }
+#upload { padding-top: 55px; padding-bottom: 40px; }
+#voice { padding-top: 40px; padding-bottom: 40px; }
+#guestbook { padding-top: 40px; }
 #voice .upload-header, #upload .upload-header { margin-bottom: 32px; }
 
 /* ================= MOBİL (GERÇEK MOBİL DENEYİM) ================= */
 @media (max-width: 768px) {
-  section { padding: 80px 15px; }
+  section { padding: 55px 15px; }
+  .quote-block { margin: 40px 0; }
+  .timeline-wrap { margin-top: 35px; }
 
   /* Katkı bölümleri mobilde daha da sıkı */
-  #upload { padding-top: 60px; padding-bottom: 30px; }
-  #voice { padding-top: 30px; padding-bottom: 30px; }
-  #guestbook { padding-top: 30px; }
+  #upload { padding-top: 45px; padding-bottom: 25px; }
+  #voice { padding-top: 25px; padding-bottom: 25px; }
+  #guestbook { padding-top: 25px; }
 
   /* Dekoratif eğri çizgiler mobilde metnin üstüne binmesin diye gizlendi */
   .svg-bg { display: none; }
