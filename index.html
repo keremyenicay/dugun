@@ -656,15 +656,22 @@ sendBtn.addEventListener('click', async () => {
   sendBtn.disabled = true;
   sendBtn.textContent = 'Gönderiliyor…';
   let okCount = 0, failCount = 0;
-  for (const item of pending) {
-    try { await uploadFile(item, guestName); okCount++; }
-    catch (e) {
-      item.status = 'error';
-      item.st.textContent = 'Hata — tekrar deneyin';
-      failCount++;
-      console.error(e);
+  // Aynı anda 3 dosya gönder — çok sayıda fotoğrafta belirgin hız kazandırır
+  const PARALLEL = 3;
+  const work = [...pending];
+  async function worker(){
+    while (work.length) {
+      const item = work.shift();
+      try { await uploadFile(item, guestName); okCount++; }
+      catch (e) {
+        item.status = 'error';
+        item.st.textContent = 'Hata — tekrar deneyin';
+        failCount++;
+        console.error(e);
+      }
     }
   }
+  await Promise.all(Array.from({length: Math.min(PARALLEL, work.length)}, worker));
   refreshBtn();
   if (okCount && !failCount) doneEl.classList.add('show');
   if (failCount) showErr('Bazı dosyalar yüklenemedi. İnternet bağlantınızı kontrol edip "Gönder"e tekrar basın; yalnızca kalanlar gönderilir.');
