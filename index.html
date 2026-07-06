@@ -9,7 +9,10 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<!-- Fontları ENGELLEMEYEN (non-render-blocking) şekilde yükle.
+     Aksi halde font sunucusu ağda takılırsa <script> hiç çalışmaz ve sayfa perdede kilitlenir. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&display=swap"></noscript>
 
 <style>
 /* ================= ROYAL ELEGANCE - DEĞİŞKENLER ================= */
@@ -620,17 +623,33 @@ window.addEventListener('wheel', openBook, { once: true, passive: true });
 window.addEventListener('touchstart', openBook, { once: true, passive: true });
 window.addEventListener('keydown', openBook, { once: true });
 
-/* ================= 3. SAYFA YÜKLENDİĞİNDE ================= */
-window.addEventListener('load', () => {
-  // Perdeyi aç ve tanecikleri başlat
+/* ================= 3. GİRİŞİ BAŞLAT =================
+   ÖNEMLİ: window.load olayına GÜVENME! Google Fonts gibi harici bir kaynak
+   ağda takılırsa 'load' hiç tetiklenmeyebilir ve perde açılmadan takılı kalır.
+   Bu script <body> sonunda olduğu için DOM zaten hazır; hemen başlatıyoruz. */
+let introStarted = false;
+function startIntro() {
+  if (introStarted) return;
+  introStarted = true;
+
+  // Perdeyi aç
   setTimeout(() => { curtain.classList.add('open'); }, 700);
-  initParticles();
+
+  try { initParticles(); } catch (e) { console.error('Tanecik hatası:', e); }
   loadGallery();
   renderMessages();
 
   // Kullanıcı hiç etkileşime geçmezse kitabı otomatik aç (site asla takılı kalmasın)
   autoOpenTimer = setTimeout(openBook, 7000);
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startIntro);
+} else {
+  startIntro();
+}
+// Ekstra güvenlik ağı: her ihtimale karşı load olayında da tetikle
+window.addEventListener('load', startIntro);
 
 /* ================= 4. APPLE KALİTESİNDE SCROLL (OBSERVER) ================= */
 const observer = new IntersectionObserver((entries) => {
