@@ -293,6 +293,29 @@ audio.voice-preview { width: min(100%, 440px); margin-top: 4px; }
 .voice-linkbtn:hover { color: var(--emerald); }
 .btn-secondary { background: linear-gradient(135deg, #8a8a8a, #a9a9a9) !important; box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important; }
 
+/* ================= 8c. KİLİT (28 AĞUSTOS'A KADAR) ================= */
+.glass-card.is-locked { position: relative; }
+.lock-overlay {
+  position: absolute; inset: 0; z-index: 5; border-radius: inherit;
+  display: flex; align-items: center; justify-content: center; text-align: center; padding: 32px 24px;
+  background: rgba(250, 249, 246, 0.82);
+  backdrop-filter: blur(11px); -webkit-backdrop-filter: blur(11px);
+  border: 1px solid var(--glass-border);
+}
+.lock-inner { max-width: 440px; }
+.lock-icon { font-size: 46px; margin-bottom: 14px; }
+.lock-overlay h4 {
+  font-family: 'Playfair Display', serif; font-size: clamp(18px, 4vw, 24px); color: var(--emerald);
+  letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px;
+}
+.lock-overlay p { font-family: 'Playfair Display', serif; color: var(--ink-light); font-size: 16px; margin-bottom: 20px; line-height: 1.6; }
+.lock-overlay p strong { color: var(--gold-deep); }
+.lock-countdown {
+  font-family: 'Playfair Display', serif; letter-spacing: 0.08em; color: var(--emerald);
+  font-weight: 600; font-size: clamp(15px, 3.6vw, 19px);
+}
+.lock-countdown span { color: var(--gold-deep); }
+
 /* ================= 9. ANI DEFTERİ (GUESTBOOK) & GALERİ ================= */
 .guestbook-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
 textarea.input-elegant { height: 150px; resize: none; }
@@ -1159,6 +1182,86 @@ sendMsgBtn.addEventListener('click', async () => {
     sendMsgBtn.innerText = original;
   }
 });
+
+/* ================= 10. KİLİT: 28 AĞUSTOS 2026'YA KADAR (Türkiye saati) =================
+   Fotoğraf, ses ve not bölümleri 28 Ağustos günü girilene kadar kilitli kalır. */
+(function initLock() {
+  const UNLOCK_TS = new Date('2026-08-28T00:00:00+03:00').getTime(); // 28 Ağustos 00:00 (Türkiye)
+  const targets = [
+    document.querySelector('#upload .glass-card'),
+    document.querySelector('#voice .glass-card'),
+    document.querySelector('#guestbook .glass-card')
+  ].filter(Boolean);
+
+  let overlays = [];
+  let locked = false;
+
+  function makeOverlay() {
+    const ov = document.createElement('div');
+    ov.className = 'lock-overlay';
+    ov.innerHTML =
+      '<div class="lock-inner">' +
+        '<div class="lock-icon">🔒</div>' +
+        '<h4>Bu bölüm henüz kilitli</h4>' +
+        '<p>Fotoğraf, ses ve not paylaşımı <strong>28 Ağustos 2026</strong> günü açılacaktır.</p>' +
+        '<div class="lock-countdown"><span data-lc="d">--</span> gün · <span data-lc="h">--</span> saat · <span data-lc="m">--</span> dk · <span data-lc="s">--</span> sn</div>' +
+      '</div>';
+    return ov;
+  }
+
+  function setContentInert(card, on) {
+    Array.prototype.forEach.call(card.children, ch => {
+      if (ch.classList.contains('lock-overlay')) return;
+      try { ch.inert = on; } catch (e) { /* eski tarayıcı: overlay yine de tıklamayı engeller */ }
+    });
+  }
+
+  function applyLock() {
+    if (locked) return;
+    locked = true;
+    overlays = [];
+    targets.forEach(card => {
+      card.classList.add('is-locked');
+      setContentInert(card, true);
+      const ov = makeOverlay();
+      card.appendChild(ov);
+      overlays.push(ov);
+    });
+    updateLock();
+  }
+
+  function removeLock() {
+    locked = false;
+    targets.forEach(card => {
+      card.classList.remove('is-locked');
+      setContentInert(card, false);
+    });
+    overlays.forEach(o => o.remove());
+    overlays = [];
+    // Butonların doğru (varsayılan) durumuna dönmesi için
+    if (typeof updateBtn === 'function') updateBtn();
+  }
+
+  function updateLock() {
+    if (!locked) return;
+    const rem = UNLOCK_TS - Date.now();
+    if (rem <= 0) { removeLock(); return; }
+    const d = Math.floor(rem / 86400000);
+    const h = Math.floor(rem % 86400000 / 3600000);
+    const m = Math.floor(rem % 3600000 / 60000);
+    const s = Math.floor(rem % 60000 / 1000);
+    overlays.forEach(ov => {
+      const set = (k, v) => { const el = ov.querySelector('[data-lc="' + k + '"]'); if (el) el.textContent = v; };
+      set('d', d);
+      set('h', String(h).padStart(2, '0'));
+      set('m', String(m).padStart(2, '0'));
+      set('s', String(s).padStart(2, '0'));
+    });
+  }
+
+  if (Date.now() < UNLOCK_TS) applyLock();
+  setInterval(updateLock, 1000);
+})();
 </script>
 </body>
 </html>
