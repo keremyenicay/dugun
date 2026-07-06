@@ -791,6 +791,41 @@ sendBtn.addEventListener('click', async () => {
   }
 });
 
+/* ================= GALERİ YÜKLEME (DRIVE'DAN) ================= */
+async function loadGallery() {
+  const track = document.querySelector('.gallery-track');
+  if (!track) return;
+  
+  try {
+    // SCRIPT_URL adresine ?action=getFiles parametresiyle istek atıyoruz
+    const response = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "getFiles" })
+    });
+    
+    const photos = await response.json();
+    
+    // Fotoğrafları galeriye ekle
+    photos.forEach(url => {
+      const div = document.createElement('div');
+      div.className = 'gallery-item';
+      div.style.backgroundImage = `url('${url}')`;
+      div.style.backgroundSize = "cover";
+      div.style.backgroundPosition = "center";
+      track.appendChild(div);
+    });
+    
+    console.log("Galeri başarıyla yüklendi:", photos.length + " adet fotoğraf.");
+  } catch(e) {
+    console.error("Galeri yüklenirken bir hata oluştu:", e);
+  }
+}
+
+// Sayfa açıldığında galeri otomatik yüklensin
+window.addEventListener('load', () => {
+    loadGallery();
+});
+  
 /* ================= 8. ANI DEFTERİ (GUESTBOOK) DEMO ================= */
 document.getElementById('sendMsgBtn').addEventListener('click', () => {
   const name = document.getElementById('msgName').value.trim();
