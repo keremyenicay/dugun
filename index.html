@@ -275,6 +275,24 @@ section { position: relative; padding: 140px 20px; z-index: 2; overflow: hidden;
 .status-msg.success { display: block; background: rgba(80, 200, 120, 0.1); color: var(--emerald-dark); border: 1px solid var(--emerald); }
 .status-msg.error { display: block; background: rgba(183, 110, 121, 0.1); color: #7a2b38; border: 1px solid var(--rose-gold); }
 
+/* ================= 8b. SESLİ MESAJ (KAYIT) ================= */
+.voice-recorder { display: flex; flex-direction: column; align-items: center; gap: 20px; margin-top: 10px; }
+.voice-btn {
+  width: 110px; height: 110px; border-radius: 50%; border: none; cursor: pointer;
+  background: linear-gradient(135deg, var(--rose-gold), #7a1522); color: #fff; font-size: 44px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 15px 40px rgba(122,21,34,0.35); transition: transform 0.3s, box-shadow 0.3s;
+}
+.voice-btn:hover { transform: translateY(-3px) scale(1.03); box-shadow: 0 20px 50px rgba(122,21,34,0.45); }
+.voice-btn.recording { animation: pulse 1.4s infinite; background: linear-gradient(135deg, #c0392b, #7a1522); }
+.voice-timer { font-family: 'Playfair Display', serif; font-size: 26px; letter-spacing: 0.1em; color: var(--emerald); font-weight: 600; }
+.voice-hint { font-size: 16px; color: var(--ink-light); text-align: center; max-width: 420px; }
+.voice-actions { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; align-items: center; }
+audio.voice-preview { width: min(100%, 440px); margin-top: 4px; }
+.voice-linkbtn { background: none; border: none; color: var(--gold-deep); text-decoration: underline; cursor: pointer; font-family: 'Playfair Display', serif; font-size: 15px; padding: 6px; }
+.voice-linkbtn:hover { color: var(--emerald); }
+.btn-secondary { background: linear-gradient(135deg, #8a8a8a, #a9a9a9) !important; box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important; }
+
 /* ================= 9. ANI DEFTERİ (GUESTBOOK) & GALERİ ================= */
 .guestbook-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
 textarea.input-elegant { height: 150px; resize: none; }
@@ -482,6 +500,37 @@ footer .line { width: 100px; height: 2px; background: var(--gold); margin: 40px 
       <div id="statusMsg" class="status-msg"></div>
 
       <button class="btn-map" id="sendBtn" style="width: 100%; margin-top: 30px; justify-content: center; padding: 20px; font-size: 18px;" disabled>Arşive Gönder</button>
+    </div>
+  </div>
+</section>
+
+<section id="voice">
+  <div class="wrap reveal">
+    <div class="upload-header">
+      <h2 class="upload-title">Sesinizi Bırakın</h2>
+      <p class="upload-desc">Güzel dileklerinizi sesli olarak da bırakabilirsiniz. Mikrofona dokunun, kaydedin ve bize gönderin.</p>
+    </div>
+
+    <div class="glass-card">
+      <input type="text" id="voiceName" class="input-elegant" placeholder="Adınız & Soyadınız" autocomplete="name">
+
+      <div class="voice-recorder">
+        <button class="voice-btn" id="voiceBtn" type="button" aria-label="Kaydı başlat veya durdur">🎙️</button>
+        <div class="voice-timer" id="voiceTimer">00:00</div>
+        <div class="voice-hint" id="voiceHint">Kaydı başlatmak için mikrofona dokunun</div>
+
+        <audio id="voicePreview" class="voice-preview" controls hidden></audio>
+
+        <div class="voice-actions">
+          <button class="btn-map" id="voiceSend" type="button" hidden>Sesi Gönder</button>
+          <button class="btn-map btn-secondary" id="voiceReset" type="button" hidden>Yeniden Kaydet</button>
+        </div>
+
+        <button class="voice-linkbtn" id="voiceFileBtn" type="button">veya hazır bir ses dosyası yükleyin</button>
+        <input type="file" id="voiceFile" accept="audio/*" hidden>
+      </div>
+
+      <div id="voiceStatus" class="status-msg"></div>
     </div>
   </div>
 </section>
@@ -818,6 +867,148 @@ sendBtn.addEventListener('click', async () => {
     statusMsg.classList.add('error');
   }
 });
+
+/* ================= 7b. SESLİ MESAJ (KAYIT + YÜKLEME) =================
+   Tarayıcıdan mikrofonla ses kaydeder veya hazır ses dosyası alır ve mevcut
+   resumable yükleme akışıyla (createSession) aynı Drive klasörüne gönderir. */
+(function initVoice() {
+  const btn = document.getElementById('voiceBtn');
+  if (!btn) return;
+  const timerEl = document.getElementById('voiceTimer');
+  const hintEl = document.getElementById('voiceHint');
+  const preview = document.getElementById('voicePreview');
+  const sendBtnV = document.getElementById('voiceSend');
+  const resetBtn = document.getElementById('voiceReset');
+  const fileBtn = document.getElementById('voiceFileBtn');
+  const fileInput = document.getElementById('voiceFile');
+  const statusV = document.getElementById('voiceStatus');
+  const nameV = document.getElementById('voiceName');
+
+  let recorder = null, stream = null, chunks = [], recording = false;
+  let blob = null, ext = 'webm', previewUrl = null;
+  let t0 = 0, timerId = null, autoStopId = null;
+  const MAX_MS = 3 * 60 * 1000; // en fazla 3 dakika
+
+  const supportsRec = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+
+  function fmt(ms) { const s = Math.floor(ms / 1000); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+  function tick() { timerEl.textContent = fmt(Date.now() - t0); }
+
+  function pickMime() {
+    const cands = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'];
+    for (const c of cands) { if (window.MediaRecorder && MediaRecorder.isTypeSupported(c)) return c; }
+    return '';
+  }
+
+  function setPreview(b) {
+    blob = b;
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = URL.createObjectURL(b);
+    preview.src = previewUrl; preview.hidden = false;
+    sendBtnV.hidden = false; resetBtn.hidden = false;
+  }
+
+  function resetAll() {
+    blob = null; chunks = [];
+    if (previewUrl) { URL.revokeObjectURL(previewUrl); previewUrl = null; }
+    preview.hidden = true; preview.removeAttribute('src');
+    sendBtnV.hidden = true; resetBtn.hidden = true;
+    sendBtnV.disabled = false; resetBtn.disabled = false;
+    timerEl.textContent = '00:00';
+    hintEl.textContent = supportsRec ? 'Kaydı başlatmak için mikrofona dokunun' : 'Cihazınız kayıt desteklemiyor; hazır bir ses dosyası yükleyebilirsiniz';
+    btn.classList.remove('recording'); btn.textContent = '🎙️';
+    statusV.className = 'status-msg';
+  }
+
+  async function startRec() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+      hintEl.textContent = 'Mikrofona erişilemedi. Lütfen izin verin ya da ses dosyası yükleyin.';
+      return;
+    }
+    const mime = pickMime();
+    ext = mime.indexOf('mp4') > -1 ? 'm4a' : (mime.indexOf('ogg') > -1 ? 'ogg' : 'webm');
+    chunks = [];
+    recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    recorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+    recorder.onstop = () => {
+      if (stream) stream.getTracks().forEach(tr => tr.stop());
+      clearInterval(timerId); clearTimeout(autoStopId);
+      recording = false;
+      btn.classList.remove('recording'); btn.textContent = '🎙️';
+      const b = new Blob(chunks, { type: (recorder && recorder.mimeType) || 'audio/webm' });
+      if (b.size > 0) { setPreview(b); hintEl.textContent = 'Kaydınızı dinleyin; beğendiyseniz gönderin.'; }
+      else resetAll();
+    };
+    recorder.start();
+    recording = true;
+    btn.classList.add('recording'); btn.textContent = '⏹';
+    hintEl.textContent = 'Kaydediliyor… bitirmek için tekrar dokunun';
+    sendBtnV.hidden = true; resetBtn.hidden = true; preview.hidden = true;
+    t0 = Date.now(); tick(); timerId = setInterval(tick, 250);
+    autoStopId = setTimeout(() => { if (recording) recorder.stop(); }, MAX_MS);
+  }
+
+  async function uploadAudio(file, guest, onProgress) {
+    const uploadUrl = await createSession(file, guest);
+    const total = file.size; let sent = 0;
+    while (sent < total) {
+      const end = Math.min(sent + CHUNK, total);
+      const res = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Range': `bytes ${sent}-${end - 1}/${total}` },
+        body: file.slice(sent, end)
+      });
+      if (res.status === 308) { const r = res.headers.get('Range'); sent = r ? parseInt(r.split('-')[1], 10) + 1 : end; }
+      else if (res.ok) sent = total;
+      else throw new Error('Yükleme hatası: ' + res.status);
+      if (onProgress) onProgress(sent / total);
+    }
+  }
+
+  btn.addEventListener('click', () => {
+    if (!supportsRec) { fileInput.click(); return; }
+    if (recording) recorder.stop();
+    else startRec();
+  });
+
+  fileBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    const f = fileInput.files[0];
+    if (!f) return;
+    if (!/^audio\//.test(f.type)) { statusV.className = 'status-msg error'; statusV.textContent = 'Lütfen bir ses dosyası seçin.'; fileInput.value = ''; return; }
+    ext = (f.name.split('.').pop() || 'm4a').toLowerCase();
+    setPreview(f);
+    hintEl.textContent = 'Dosya hazır; göndermek için "Sesi Gönder"e dokunun.';
+    fileInput.value = '';
+  });
+
+  resetBtn.addEventListener('click', resetAll);
+
+  sendBtnV.addEventListener('click', async () => {
+    if (!blob) return;
+    const guest = (nameV.value || '').trim();
+    const stamp = new Date().toLocaleString('tr-TR').replace(/[.:]/g, '-').replace(/\s+/g, '_');
+    const safe = (guest || 'Misafir').replace(/[\\/:*?"<>|]/g, '') || 'Misafir';
+    const file = new File([blob], `Ses - ${safe} - ${stamp}.${ext}`, { type: blob.type || 'audio/webm' });
+
+    sendBtnV.disabled = true; resetBtn.disabled = true;
+    const orig = sendBtnV.textContent; sendBtnV.textContent = 'Gönderiliyor… %0';
+    statusV.className = 'status-msg';
+    try {
+      await uploadAudio(file, guest, p => { sendBtnV.textContent = `Gönderiliyor… %${Math.round(p * 100)}`; });
+      statusV.className = 'status-msg success'; statusV.textContent = '✓ Sesli mesajınız gönderildi. Teşekkür ederiz!';
+      setTimeout(resetAll, 600);
+    } catch (e) {
+      console.error('Ses gönderilemedi:', e);
+      statusV.className = 'status-msg error'; statusV.textContent = 'Sesli mesaj gönderilemedi. Lütfen bağlantınızı kontrol edip tekrar deneyin.';
+      sendBtnV.disabled = false; resetBtn.disabled = false; sendBtnV.textContent = orig;
+    }
+  });
+
+  resetAll();
+})();
 
 /* ================= 8. GALERİ (DRIVE'DAN FOTOĞRAFLAR) ================= */
 function driveImageUrl(item) {
