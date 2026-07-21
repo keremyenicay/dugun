@@ -761,22 +761,26 @@ function addToCalendar(key) {
 
   const ua = navigator.userAgent || '';
   const isIOS = /iP(hone|ad|od)/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(ua);
 
-  if (isIOS) {
-    // iOS Safari: data URI ile açınca Takvim uygulaması devreye girer.
-    const dataUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
-    window.location.href = dataUri;
+  const url = URL.createObjectURL(blob);
+
+  if (isIOS || isSafari) {
+    // iOS Safari / masaüstü Safari: blob adresine gidince Takvim "Etkinlik Ekle"
+    // önizlemesi açılır. (data: URI'leri iOS artık takvim için açmıyor ve
+    // download özniteliği iOS'ta desteklenmiyor; bu yüzden doğrudan yönlendiriyoruz.)
+    window.location.href = url;
   } else {
-    // Android & masaüstü: .ics indir → Takvim uygulamasında açılır.
-    const url = URL.createObjectURL(blob);
+    // Android & masaüstü (Chrome/Edge/Firefox): .ics indir → Takvim uygulamasında açılır.
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
   }
+
+  setTimeout(function () { URL.revokeObjectURL(url); }, 8000);
 }
 
 /* ================= 5. GERÇEK ZAMANLI SAYAÇ ================= */
