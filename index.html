@@ -761,17 +761,24 @@ function addToCalendar(key) {
 
   const ua = navigator.userAgent || '';
   const isIOS = /iP(hone|ad|od)/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(ua);
+  // iOS Safari (Chrome/Firefox iOS "CriOS/FxiOS" içerir → false döner)
+  const isIOSSafari = isIOS && /^((?!crios|fxios|edgios|opt).)*safari/i.test(ua);
+
+  if (isIOS && !isIOSSafari) {
+    // iPhone Chrome / Firefox / Edge: blob adresini takvim için açmıyorlar.
+    // data: URI ile yönlendirince Takvim "Etkinlik Ekle" önizlemesi açılır.
+    window.location.href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
+    return;
+  }
 
   const url = URL.createObjectURL(blob);
 
-  if (isIOS || isSafari) {
-    // iOS Safari / masaüstü Safari: blob adresine gidince Takvim "Etkinlik Ekle"
-    // önizlemesi açılır. (data: URI'leri iOS artık takvim için açmıyor ve
-    // download özniteliği iOS'ta desteklenmiyor; bu yüzden doğrudan yönlendiriyoruz.)
+  if (isIOSSafari) {
+    // iPhone Safari: blob adresine gidince Takvim "Etkinlik Ekle" önizlemesi açılır.
+    // (download özniteliği iOS'ta desteklenmediği için doğrudan yönlendiriyoruz.)
     window.location.href = url;
   } else {
-    // Android & masaüstü (Chrome/Edge/Firefox): .ics indir → Takvim uygulamasında açılır.
+    // Android & masaüstü (Chrome/Edge/Firefox/Safari): .ics indir → Takvim uygulamasında açılır.
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
