@@ -220,6 +220,17 @@ section { position: relative; padding: 90px 20px; z-index: 2; overflow: hidden; 
 .btn-map:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(212, 175, 55, 0.5); }
 .btn-map:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2); }
 
+/* Takvime Ekle butonu */
+.btn-cal {
+  display: inline-flex; align-items: center; gap: 10px; padding: 12px 28px;
+  margin-top: 12px; margin-left: 10px;
+  background: linear-gradient(135deg, var(--emerald), #2a6b54);
+  color: #fff; text-decoration: none; font-family: 'Playfair Display', serif; font-size: 15px; letter-spacing: 0.15em; text-transform: uppercase;
+  border-radius: 30px; transition: all 0.4s ease; box-shadow: 0 10px 20px rgba(27, 77, 62, 0.3); border: none; cursor: pointer;
+}
+.btn-cal:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(27, 77, 62, 0.5); }
+@media (max-width: 520px) { .btn-cal { margin-left: 0; } }
+
 /* ================= 7. GÜZEL SÖZLER (QUOTES) ================= */
 .quote-block { text-align: center; margin: 55px 0; padding: 0 20px; }
 .quote-text {
@@ -477,6 +488,7 @@ footer .line { width: 100px; height: 2px; background: var(--gold); margin: 40px 
             <h3 class="event-title script-font">Nikah & Kına</h3>
             <p class="event-details"><strong>28 Ağustos 2026, Cuma · 20:00</strong>Can Palas Düğün Salonları, Platin Salon<br>Uşak / Merkez</p>
             <a href="https://maps.google.com/?q=Can+Palas+Düğün+Salonları+Uşak" target="_blank" rel="noopener" class="btn-map">📍 Yol Tarifi</a>
+            <button type="button" class="btn-cal" onclick="addToCalendar('nikah')">📅 Takvime Ekle</button>
           </div>
         </div>
         <div class="tl-dot"></div>
@@ -491,6 +503,7 @@ footer .line { width: 100px; height: 2px; background: var(--gold); margin: 40px 
             <h3 class="event-title script-font">Gelin Alma</h3>
             <p class="event-details"><strong>29 Ağustos 2026, Cmt · 15:00</strong>Gelin Evi: Atatürk Mah. Sema Sok. No: 36<br>Uşak / Merkez</p>
             <a href="https://maps.google.com/?q=Atatürk+Mahallesi+Sema+Sokak+Uşak" target="_blank" rel="noopener" class="btn-map">📍 Yol Tarifi</a>
+            <button type="button" class="btn-cal" onclick="addToCalendar('gelin')">📅 Takvime Ekle</button>
           </div>
         </div>
       </div>
@@ -502,6 +515,7 @@ footer .line { width: 100px; height: 2px; background: var(--gold); margin: 40px 
             <p class="event-details"><strong>29 Ağustos 2026, Cmt · 19:00</strong>Twentysix Düğün Salonu, Yıldız Salon<br>Eskişehir / Batıkent</p>
             <p style="color:var(--rose-gold); font-style:italic; margin-bottom:20px;">* Düğünümüz yemeklidir.</p>
             <a href="https://maps.google.com/?q=Twentysix+Düğün+Salonu+Eskişehir" target="_blank" rel="noopener" class="btn-map">📍 Yol Tarifi</a>
+            <button type="button" class="btn-cal" onclick="addToCalendar('dugun')">📅 Takvime Ekle</button>
           </div>
         </div>
         <div class="tl-dot"></div>
@@ -672,6 +686,98 @@ const observer = new IntersectionObserver((entries) => {
 
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 observer.observe(document.getElementById('timelineWrap'));
+
+/* ================= TAKVİME EKLE (iPhone & Android) =================
+   Etkinlik bilgilerinden bir .ics dosyası üretir. iPhone'da bağlantıya
+   basınca Apple Takvim, Android'de Google Takvim / Takvim uygulaması açılır
+   ve başlık, tarih, saat, konum otomatik dolar. Saatler Türkiye saatidir. */
+const CAL_EVENTS = {
+  nikah: {
+    title: 'Gülçiçek & Kerem — Nikah & Kına',
+    start: '20260828T200000', end: '20260828T233000',
+    location: 'Can Palas Düğün Salonları, Platin Salon, Uşak / Merkez',
+    desc: 'Gülçiçek & Kerem çiftinin Nikah & Kına töreni.'
+  },
+  gelin: {
+    title: 'Gülçiçek & Kerem — Gelin Alma',
+    start: '20260829T150000', end: '20260829T170000',
+    location: 'Atatürk Mah. Sema Sok. No: 36, Uşak / Merkez',
+    desc: 'Gülçiçek & Kerem çiftinin Gelin Alma töreni.'
+  },
+  dugun: {
+    title: 'Gülçiçek & Kerem — Düğün',
+    start: '20260829T190000', end: '20260829T233000',
+    location: 'Twentysix Düğün Salonu, Yıldız Salon, Eskişehir / Batıkent',
+    desc: 'Gülçiçek & Kerem çiftinin Düğün töreni. Düğünümüz yemeklidir.'
+  }
+};
+
+function _icsEscape(s) {
+  return String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+}
+
+function addToCalendar(key) {
+  const ev = CAL_EVENTS[key];
+  if (!ev) return;
+
+  const dtstamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const uid = key + '-' + Date.now() + '@gulcicek-kerem-dugun';
+
+  // Türkiye saati (UTC+3) — TZID ile veriyoruz ki telefon doğru saati göstersin.
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Gulcicek Kerem Dugun//TR',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VTIMEZONE',
+    'TZID:Europe/Istanbul',
+    'BEGIN:STANDARD',
+    'DTSTART:19700101T000000',
+    'TZOFFSETFROM:+0300',
+    'TZOFFSETTO:+0300',
+    'TZNAME:+03',
+    'END:STANDARD',
+    'END:VTIMEZONE',
+    'BEGIN:VEVENT',
+    'UID:' + uid,
+    'DTSTAMP:' + dtstamp,
+    'DTSTART;TZID=Europe/Istanbul:' + ev.start,
+    'DTEND;TZID=Europe/Istanbul:' + ev.end,
+    'SUMMARY:' + _icsEscape(ev.title),
+    'LOCATION:' + _icsEscape(ev.location),
+    'DESCRIPTION:' + _icsEscape(ev.desc),
+    'BEGIN:VALARM',
+    'ACTION:DISPLAY',
+    'DESCRIPTION:' + _icsEscape(ev.title),
+    'TRIGGER:-P1D',
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+
+  const filename = 'dugun-' + key + '.ics';
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+
+  const ua = navigator.userAgent || '';
+  const isIOS = /iP(hone|ad|od)/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  if (isIOS) {
+    // iOS Safari: data URI ile açınca Takvim uygulaması devreye girer.
+    const dataUri = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
+    window.location.href = dataUri;
+  } else {
+    // Android & masaüstü: .ics indir → Takvim uygulamasında açılır.
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+  }
+}
 
 /* ================= 5. GERÇEK ZAMANLI SAYAÇ ================= */
 const weddingDate = new Date("2026-08-28T20:00:00").getTime();
